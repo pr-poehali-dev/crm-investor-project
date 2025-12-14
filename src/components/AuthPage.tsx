@@ -53,9 +53,13 @@ export const AuthPage = () => {
         description: 'Добро пожаловать в Halal Invest',
       });
     } catch (error: any) {
+      console.error('Login error:', error);
+      const message = error.response?.data?.message || 
+                      error.response?.data?.error || 
+                      (error.response?.status === 0 ? 'Сервер недоступен. Включите демо-режим для тестирования.' : 'Неверный email или пароль');
       toast({
         title: '❌ Ошибка входа',
-        description: error.response?.data?.message || 'Неверный email или пароль',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -94,9 +98,14 @@ export const AuthPage = () => {
         description: demoMode ? 'Используйте код: 123456' : 'Мы отправили код подтверждения на вашу почту',
       });
     } catch (error: any) {
+      console.error('Register error:', error);
+      const message = error.response?.data?.message || 
+                      error.response?.data?.error || 
+                      (error.response?.status === 0 ? 'Сервер недоступен' : 
+                      error.response?.status === 409 ? 'Email уже используется' : 'Ошибка регистрации');
       toast({
         title: '❌ Ошибка регистрации',
-        description: error.response?.data?.message || 'Email уже используется',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -117,9 +126,15 @@ export const AuthPage = () => {
       setMode('login');
       setVerificationCode('');
     } catch (error: any) {
+      console.error('Verify error:', error);
+      const message = error.response?.data?.message || 
+                      error.response?.data?.error || 
+                      (error.response?.status === 0 ? 'Сервер недоступен' : 
+                      error.response?.status === 400 ? 'Неверный код' : 
+                      error.response?.status === 404 ? 'Код истёк или не найден' : 'Ошибка подтверждения');
       toast({
-        title: '❌ Неверный код',
-        description: error.response?.data?.message || 'Проверьте код из письма',
+        title: '❌ Ошибка проверки',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -135,10 +150,11 @@ export const AuthPage = () => {
         title: '📧 Код отправлен',
         description: 'Проверьте email',
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Resend error:', error);
       toast({
         title: '❌ Ошибка',
-        description: 'Не удалось отправить код',
+        description: error.response?.data?.message || 'Не удалось отправить код',
         variant: 'destructive',
       });
     } finally {

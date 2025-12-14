@@ -1,26 +1,46 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import type { RegisterDto, LoginDto, VerifyEmailDto, TokenResponseDto, UserDto, SessionDto } from '@/types/auth';
 
-const API_BASE_URL = 'http://localhost:3000/rest';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/rest';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.code === 'ERR_NETWORK') {
+      console.error('Network error: Backend недоступен на', API_BASE_URL);
+      return Promise.reject({
+        response: {
+          data: { message: 'Не удается подключиться к серверу. Проверьте что backend запущен на ' + API_BASE_URL },
+          status: 0,
+        },
+      });
+    }
+    
+    if (error.response?.status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
       
       try {
@@ -33,8 +53,10 @@ api.interceptors.response.use(
           localStorage.setItem('accessToken', data.accessToken);
           localStorage.setItem('refreshToken', data.refreshToken);
           
-          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-          return api(originalRequest);
+          if (originalRequest) {
+            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+            return api(originalRequest);
+          }
         }
       } catch (refreshError) {
         localStorage.removeItem('accessToken');
