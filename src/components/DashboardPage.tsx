@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api';
+import { mockAuthApi } from '@/lib/mockApi';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import type { SessionDto, UserDto } from '@/types/auth';
 import Icon from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
+
+const isDemoMode = () => localStorage.getItem('demoMode') === 'true';
 
 export const DashboardPage = () => {
   const [user, setUser] = useState<UserDto | null>(null);
@@ -15,6 +18,8 @@ export const DashboardPage = () => {
   const { logout, userId } = useAuthStore();
   const { toast } = useToast();
 
+  const api = isDemoMode() ? mockAuthApi : authApi;
+
   useEffect(() => {
     loadData();
   }, []);
@@ -22,8 +27,8 @@ export const DashboardPage = () => {
   const loadData = async () => {
     try {
       const [userData, sessionsData] = await Promise.all([
-        authApi.getMe(),
-        authApi.getSessions(),
+        api.getMe(),
+        api.getSessions(),
       ]);
       
       setUser(userData.data);
@@ -41,7 +46,7 @@ export const DashboardPage = () => {
 
   const handleDeleteSession = async (sessionId: number) => {
     try {
-      await authApi.deleteSession(sessionId);
+      await api.deleteSession(sessionId);
       setSessions(sessions.filter(s => s.id !== sessionId));
       toast({
         title: '✅ Сессия удалена',

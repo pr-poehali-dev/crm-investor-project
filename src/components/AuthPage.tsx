@@ -4,11 +4,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api';
+import { mockAuthApi } from '@/lib/mockApi';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import { Switch } from '@/components/ui/switch';
 
 type AuthMode = 'login' | 'register' | 'verify';
+
+const isDemoMode = () => localStorage.getItem('demoMode') === 'true';
 
 export const AuthPage = () => {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -17,19 +21,31 @@ export const AuthPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoMode, setDemoMode] = useState(isDemoMode());
   
   const { setTokens, setUserId } = useAuthStore();
   const { toast } = useToast();
+
+  const api = demoMode ? mockAuthApi : authApi;
+
+  const toggleDemoMode = (enabled: boolean) => {
+    setDemoMode(enabled);
+    localStorage.setItem('demoMode', String(enabled));
+    if (enabled) {
+      setEmail('demo@halal.invest');
+      setPassword('demo1234');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const { data } = await authApi.login({ email, password });
+      const { data } = await api.login({ email, password });
       setTokens(data.accessToken, data.refreshToken);
       
-      const { data: userData } = await authApi.getMe();
+      const { data: userData } = await api.getMe();
       setUserId(userData.id);
       
       toast({
@@ -71,11 +87,11 @@ export const AuthPage = () => {
     setLoading(true);
     
     try {
-      await authApi.register({ email, password });
+      await api.register({ email, password });
       setMode('verify');
       toast({
         title: '📧 Проверьте email',
-        description: 'Мы отправили код подтверждения на вашу почту',
+        description: demoMode ? 'Используйте код: 123456' : 'Мы отправили код подтверждения на вашу почту',
       });
     } catch (error: any) {
       toast({
@@ -93,7 +109,7 @@ export const AuthPage = () => {
     setLoading(true);
     
     try {
-      await authApi.verifyEmail({ email, code: verificationCode });
+      await api.verifyEmail({ email, code: verificationCode });
       toast({
         title: '✅ Email подтверждён',
         description: 'Теперь вы можете войти в систему',
@@ -114,7 +130,7 @@ export const AuthPage = () => {
   const handleResendCode = async () => {
     setLoading(true);
     try {
-      await authApi.resendCode(email);
+      await api.resendCode(email);
       toast({
         title: '📧 Код отправлен',
         description: 'Проверьте email',
@@ -138,6 +154,21 @@ export const AuthPage = () => {
             Halal Invest
           </h1>
           <p className="text-gray-600">Система управления инвестициями</p>
+        </div>
+
+        <div className="mb-4 p-4 bg-white rounded-lg shadow-md border border-blue-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Icon name="TestTube" className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="font-semibold text-sm text-gray-800">Демо-режим</p>
+                <p className="text-xs text-gray-500">
+                  {demoMode ? 'demo@halal.invest / demo1234' : 'Работа с реальным API'}
+                </p>
+              </div>
+            </div>
+            <Switch checked={demoMode} onCheckedChange={toggleDemoMode} />
+          </div>
         </div>
 
         <Card className="shadow-xl border-0">
