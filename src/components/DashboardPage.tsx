@@ -15,7 +15,7 @@ export const DashboardPage = () => {
   const [user, setUser] = useState<UserDto | null>(null);
   const [sessions, setSessions] = useState<SessionDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const { logout, userId } = useAuthStore();
+  const { userId } = useAuthStore();
   const { toast } = useToast();
 
   const api = isDemoMode() ? mockAuthApi : authApi;
@@ -61,14 +61,6 @@ export const DashboardPage = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: '👋 До свидания',
-      description: 'Вы успешно вышли из системы',
-    });
-  };
-
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString('ru-RU', {
       day: 'numeric',
@@ -88,28 +80,7 @@ export const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      <nav className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Icon name="TrendingUp" className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Halal Invest
-              </h1>
-              <p className="text-xs text-gray-500">ID: {userId}</p>
-            </div>
-          </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <Icon name="LogOut" className="mr-2 h-4 w-4" />
-            Выйти
-          </Button>
-        </div>
-      </nav>
-
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           <Card className="shadow-lg border-0 animate-fade-in">
             <CardHeader className="pb-3">
@@ -203,6 +174,5 @@ export const DashboardPage = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 };
