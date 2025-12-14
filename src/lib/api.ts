@@ -96,4 +96,15 @@ export const authApi = {
     api.delete(`/auth/sessions/${sessionId}`),
 };
 
+export const passwordApi = {
+  requestReset: (email: string) => 
+    api.post('/auth/password/reset/request', { email }),
+  
+  resetPassword: (email: string, code: string, newPassword: string) => 
+    api.post('/auth/password/reset', { email, code, newPassword }),
+  
+  changePassword: (currentPassword: string, newPassword: string) => 
+    api.post('/auth/password/change', { currentPassword, newPassword }),
+};
+
 export default api;
