@@ -1,19 +1,11 @@
-import { useState } from 'react';
-import { LoginPage } from '@/components/LoginPage';
-import { Dashboard } from '@/components/Dashboard';
+import { AuthPage } from '@/components/AuthPage';
+import { DashboardPage } from '@/components/DashboardPage';
+import { useAuthStore } from '@/store/authStore';
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
 
-  return (
-    <>
-      {!isAuthenticated ? (
-        <LoginPage onLogin={() => setIsAuthenticated(true)} />
-      ) : (
-        <Dashboard onLogout={() => setIsAuthenticated(false)} />
-      )}
-    </>
-  );
+  return isAuthenticated ? <DashboardPage /> : <AuthPage />;
 };
 
 export default Index;
